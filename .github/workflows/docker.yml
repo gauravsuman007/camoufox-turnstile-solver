@@ -59,6 +59,17 @@ jobs:
       #      from any runner (including arm64 self-hosted if added later).
       #   2. GHA layer cache (type=gha) -- faster hit on the same runner because
       #      it's stored locally; additive with the registry cache.
+      # After a successful main-branch push, tell the seeder repo to rebuild so
+      # its image always pairs with the latest sidecar. The secret is a classic
+      # PAT (repo scope) stored as SEEDER_DISPATCH_TOKEN in this repo's secrets.
+      - name: Trigger seeder rebuild
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.SEEDER_DISPATCH_TOKEN }}
+          repository: gauravsuman007/plab-seeder
+          event-type: sidecar-updated
+
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
